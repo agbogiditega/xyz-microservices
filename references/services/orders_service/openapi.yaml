@@ -1,0 +1,43 @@
+openapi: 3.0.3
+info:
+  title: Orders Service API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      summary: Create a new order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateOrderResponse"
+        "400":
+          description: Invalid request
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required: [sku, qty]
+      properties:
+        sku:
+          type: string
+          example: SKU-123
+        qty:
+          type: integer
+          minimum: 1
+          example: 2
+    CreateOrderResponse:
+      type: object
+      properties:
+        order_id:
+          type: string
+          example: 9b3e8a2c-acde-4e1c
