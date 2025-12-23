@@ -92,4 +92,55 @@ pytest
 pytest services/**/tests/unit
 ```
 
+### Run integration tests (Docker required)
+```
+pytest services/**/tests/integration
+```
+
+### Run E2E tests
+```
+pytest tests/e2e
+```
+
+## Test Coverage
+Generate coverage report:
+```
+pytest --cov --cov-report=term-missing --cov-report=xml
+```
+Outputs:
+* Console coverage summary
+* coverage.xml for CI/CD reporting tools
+
+## CI/CD Pipeline Behavior
+The GitHub actions pipeline automatically executes on:
+* Pull requests
+* Pushes to main
+
+CI Steps
+1. Checkout code
+2. Install dependencies
+3. Run unit, integration and E2E tests
+4. Generate coverage reports
+5. Upload coverage artifacts
+
+CI configuration file:
+```
+.github/workflows/ci.yml
+```
+
+## Environment Variables
+| Variable | Description | Default |
+|---|---|---|
+|RABBITMQ_URL | AMQP connection string | amqp://guest:guest@localhost:5672 |
+| AWS_REGION | AWS region | us-east-1 |
+| SQS_QUEUE_URL | AWS SQS queue | arn:aws:sqs:us-east-1:123456789012:queue_name |
+|SNS_TOPIC_ARN | AWS SNS TOpic | arn:aws:sns:us-east-1:123456789012:my_topic_name |
+| AWS_ROLE_ARN | CI IAM Role | arn:aws:iam::123456789012:role/cirole |
+
+## Contribution Guidelines
+1. Write unit tests for all new business logic
+2. Add integration tests for external dependencies
+3. Ensure E2E coverage for critical workflows
+4. Maintain > 80% code coverage
+5. All tests must pass before merge
 
