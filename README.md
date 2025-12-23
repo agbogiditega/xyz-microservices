@@ -30,4 +30,58 @@ It supports unit, integration and end-to-end (E2E) testing across services commu
 | Tracing | AWS X-Ray |
 | Container Registry | Amazon ECR |
 
+## Local Development Setup
+1. Clone the repository
+```
+git clone https://github.com/xyz-corp/xyz-microservices.git
+cd xyz-microservices
+```
+2. Create and activate virtual environment
+```
+python -m venv .venv
+source .venv/bin/activate     # macOS/Linux
+.venv\Scripts\activate        # windows
+```
+3. Install dependencies
+```
+pip install --upgrade
+pip install -e ".[test]"
+```
+This installs:
+* Runtime dependencies
+* Testing dependencies
+* Coverage tools
+
+## Running Services Locally
+### Start RabbitMQ (Docker)
+```
+docker run -d \
+  --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  rabbitmq:3.12-management
+```
+Management UI: http://localhost:15672  
+Default credentials: guest / guest
+
+### Run a service (i.e. Orders Service)
+```
+cd services/orders_service
+python -m uvicorn orders_service.app.main:app --reload --port 8010
+```
+API docs available at: http://localhost:8010/docs
+
+### Testing Strategy Overview
+Detailed  documentation is available in: [Testing Strategy](./docs/testing-strategy.md)
+
+### Test Levels
+| Test Type | Purpose | Location |
+| -------- | ------- | -------- |
+| Unit | Validate business logic | services/**/tests/unit |
+| Integration | Validate service and dependencies | services/**/tests/integration | 
+| End-to-End | Validate cross service workflows | tests/e2e |
+
+## Running Tests Locally
+### Run all tests
+
 
