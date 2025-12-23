@@ -83,5 +83,13 @@ Detailed  documentation is available in: [Testing Strategy](./docs/testing-strat
 
 ## Running Tests Locally
 ### Run all tests
+```
+pytest
+```
+
+### Run only unit tests
+```
+pytest services/**/tests/unit
+```
 
 
