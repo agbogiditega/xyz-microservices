@@ -20,3 +20,8 @@ addopts = "-q --disable-warnings --maxfail=1"
 [tool.coverage.run]
 branch = true
 source = ["services"]
+
+[tool.setuptools.packages.find]
+include = ["services*", "references*"]
+# or exclude unwanted directories
+exclude = ["tests*", "docs*"]
