@@ -27,7 +27,7 @@ class XyzOrdersStack(Stack):
             self,
             "Vpc",
             max_azs=2,
-            nat_gateways=0,  # keep minimal/cost-light for exemplar
+            nat_gateways=1,  # keep minimal/cost-light for exemplar
         )
 
         cluster = ecs.Cluster(self, "Cluster", vpc=vpc, cluster_name=f"{name_prefix}-cluster")
