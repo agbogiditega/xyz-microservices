@@ -22,7 +22,11 @@ def wait_http(url: str, timeout_s: int = 20):
 
 def test_e2e_order_created_event():
     with RabbitMqContainer("rabbitmq:3.13-management") as rabbit:
-        rabbit_url = rabbit.get_connection_url()
+        # Construct the AMQP URL manually
+        host = rabbit.get_container_host_ip()
+        port = rabbit.get_exposed_port(5672)
+        rabbit_url = f"amqp://guest:guest@{host}:{port}/"
+
         env = os.environ.copy()
         env["RABBITMQ_URL"] = rabbit_url
 
@@ -41,15 +45,13 @@ def test_e2e_order_created_event():
             ch.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
             q = ch.queue_declare(queue="", exclusive=True).method.queue
             ch.queue_bind(queue=q, exchange=EXCHANGE, routing_key="#")
-            conn.close()
+            # Keep connection open to preserve exclusive queue
 
             # call REST endpoint
             r = httpx.post("http://127.0.0.1:8010/orders", json={"sku": "SKU-123", "qty": 1})
             r.raise_for_status()
 
-            # assert at least one event arrives
-            conn = pika.BlockingConnection(pika.URLParameters(rabbit_url))
-            ch = conn.channel()
+            # assert at least one event arrives (reuse same channel)
             method, _, body = ch.basic_get(queue=q, auto_ack=True)
             conn.close()
 
