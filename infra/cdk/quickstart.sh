@@ -6,7 +6,6 @@ if [[ "${1:-}" == "--build-image" ]]; then
   BUILD_IMAGE=true
 fi
 
-# Change default region here if needed
 REGION="${AWS_REGION:-us-east-1}"
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 
@@ -18,7 +17,6 @@ command -v node >/dev/null 2>&1 || { echo "ERROR: node not found (install Node.j
 command -v npm  >/dev/null 2>&1 || { echo "ERROR: npm not found"; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 not found"; exit 1; }
 
-# Install CDK CLI if missing
 if ! command -v cdk >/dev/null 2>&1; then
   echo "CDK CLI not found. Installing globally with npm..."
   npm install -g aws-cdk
@@ -42,19 +40,34 @@ cdk bootstrap -c account="${ACCOUNT_ID}" -c region="${REGION}"
 echo "Deploying stack..."
 cdk deploy -c account="${ACCOUNT_ID}" -c region="${REGION}" --require-approval never
 
+STACK_NAME="XyzOrdersDev"
+
+ECR_REPO_URI=$(aws cloudformation describe-stacks \
+  --stack-name "${STACK_NAME}" \
+  --query "Stacks[0].Outputs[?OutputKey=='OrdersEcrRepo'].OutputValue" \
+  --output text \
+  --region "${REGION}")
+
+CLUSTER_NAME=$(aws cloudformation describe-stacks \
+  --stack-name "${STACK_NAME}" \
+  --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" \
+  --output text \
+  --region "${REGION}" 2>/dev/null || true)
+
+SERVICE_NAME=$(aws cloudformation describe-stacks \
+  --stack-name "${STACK_NAME}" \
+  --query "Stacks[0].Outputs[?OutputKey=='ServiceName'].OutputValue" \
+  --output text \
+  --region "${REGION}" 2>/dev/null || true)
+
 echo ""
 echo "✅ Deployment complete."
-echo "Next: build/push the Orders image to the ECR repo printed in CDK outputs (OrdersEcrRepo)."
+echo "ECR repo: ${ECR_REPO_URI}"
 
 if [[ "$BUILD_IMAGE" == "true" ]]; then
   echo "Building and pushing Orders image to ECR..."
 
-  ECR_REPO_URI=$(aws cloudformation describe-stacks \
-    --stack-name XyzOrdersDev \
-    --query "Stacks[0].Outputs[?OutputKey=='OrdersEcrRepo'].OutputValue" \
-    --output text)
-
-  aws ecr get-login-password --region "$REGION" | docker login \
+  aws ecr get-login-password --region "${REGION}" | docker login \
     --username AWS \
     --password-stdin "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
@@ -63,5 +76,20 @@ if [[ "$BUILD_IMAGE" == "true" ]]; then
   docker push "${ECR_REPO_URI}:latest"
 
   echo "Image pushed to ECR."
-fi
 
+  # Force ECS to pull the newly pushed image
+  if [[ -n "${CLUSTER_NAME}" && -n "${SERVICE_NAME}" && "${CLUSTER_NAME}" != "None" && "${SERVICE_NAME}" != "None" ]]; then
+    echo "Forcing ECS new deployment (to pull latest image)..."
+    aws ecs update-service \
+      --cluster "${CLUSTER_NAME}" \
+      --service "${SERVICE_NAME}" \
+      --force-new-deployment \
+      --region "${REGION}" >/dev/null
+    echo "✅ ECS deployment triggered."
+  else
+    echo "NOTE: Could not determine ECS cluster/service from stack outputs."
+    echo "If tasks are still failing, force a new deployment in the ECS console."
+  fi
+else
+  echo "Next: build/push the Orders image to ECR, then force a new ECS deployment."
+fi
