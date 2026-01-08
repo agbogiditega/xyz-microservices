@@ -2,7 +2,6 @@ import json
 import os
 import pika
 from testcontainers.rabbitmq import RabbitMqContainer
-#from orders_service.app.publisher import publish_order_created, EXCHANGE, ROUTING_KEY
 from services.orders_service.app.publisher import publish_order_created, EXCHANGE, ROUTING_KEY
 
 
@@ -14,9 +13,11 @@ def _consume_one(url: str, queue: str) -> dict:
     assert method is not None, "Expected at least one message"
     return json.loads(body.decode("utf-8"))
 
+
 def test_publish_order_created_to_rabbitmq():
     with RabbitMqContainer("rabbitmq:3.13-management") as rabbit:
-        url = rabbit.get_connection_url()
+        # Use the correct method name
+        url = rabbit.get_amqp_url()
         os.environ["RABBITMQ_URL"] = url
 
         # Bind a test queue to the exchange/routing key
