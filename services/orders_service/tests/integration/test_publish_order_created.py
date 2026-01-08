@@ -22,16 +22,25 @@ def test_publish_order_created_to_rabbitmq():
         url = f"amqp://guest:guest@{host}:{port}/"
         os.environ["RABBITMQ_URL"] = url
 
-        # Bind a test queue to the exchange/routing key
+        # Set up the exchange and queue (keep connection open)
         conn = pika.BlockingConnection(pika.URLParameters(url))
         ch = conn.channel()
         ch.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
         q = ch.queue_declare(queue="", exclusive=True).method.queue
         ch.queue_bind(queue=q, exchange=EXCHANGE, routing_key=ROUTING_KEY)
+        # DON'T close the connection yet!
+
+        # Publish the message
+        publish_order_created({"order_id": "o-1", "sku": "SKU-123", "qty": 2})
+
+        # Consume the message (using the same channel)
+        method, _, body = ch.basic_get(queue=q, auto_ack=True)
+        assert method is not None, "Expected at least one message"
+        msg = json.loads(body.decode("utf-8"))
+
+        # Now close the connection
         conn.close()
 
-        publish_order_created({"order_id": "o-1", "sku": "SKU-123", "qty": 2})
-        msg = _consume_one(url, q)
-
+        # Assertions
         assert msg["type"] == "OrderCreated"
         assert msg["data"]["order_id"] == "o-1"
