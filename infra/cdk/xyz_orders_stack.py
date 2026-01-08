@@ -68,7 +68,7 @@ class XyzOrdersStack(Stack):
             "OrdersService",
             cluster=cluster,
             public_load_balancer=True,
-            desired_count=1,
+            desired_count=0,
             cpu=512,
             memory_limit_mib=1024,
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
