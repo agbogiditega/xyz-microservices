@@ -93,3 +93,11 @@ if [[ "$BUILD_IMAGE" == "true" ]]; then
 else
   echo "Next: build/push the Orders image to ECR, then force a new ECS deployment."
 fi
+
+echo "Scaling service up to 1 task..."
+aws ecs update-service \
+  --cluster "${CLUSTER_NAME}" \
+  --service "${SERVICE_NAME}" \
+  --desired-count 1 \
+  --force-new-deployment \
+  --region "${REGION}" >/dev/null
