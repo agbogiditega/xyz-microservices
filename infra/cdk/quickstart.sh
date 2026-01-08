@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+BUILD_IMAGE=false
+if [[ "${1:-}" == "--build-image" ]]; then
+  BUILD_IMAGE=true
+fi
+
 # Change default region here if needed
 REGION="${AWS_REGION:-us-east-1}"
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
@@ -40,3 +45,23 @@ cdk deploy -c account="${ACCOUNT_ID}" -c region="${REGION}" --require-approval n
 echo ""
 echo "✅ Deployment complete."
 echo "Next: build/push the Orders image to the ECR repo printed in CDK outputs (OrdersEcrRepo)."
+
+if [[ "$BUILD_IMAGE" == "true" ]]; then
+  echo "Building and pushing Orders image to ECR..."
+
+  ECR_REPO_URI=$(aws cloudformation describe-stacks \
+    --stack-name XyzOrdersDev \
+    --query "Stacks[0].Outputs[?OutputKey=='OrdersEcrRepo'].OutputValue" \
+    --output text)
+
+  aws ecr get-login-password --region "$REGION" | docker login \
+    --username AWS \
+    --password-stdin "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+
+  docker build -t orders:latest ../../services/orders_service
+  docker tag orders:latest "${ECR_REPO_URI}:latest"
+  docker push "${ECR_REPO_URI}:latest"
+
+  echo "Image pushed to ECR."
+fi
+
