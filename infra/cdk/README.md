@@ -126,6 +126,14 @@ InventoryQueueUrl
 
 ## 6) Build and push the Orders container image to ECR
 
+Verify the Orders service locally (recommended)
+
+Before pushing the image to ECR, verify that the Orders service builds and runs locally.
+
+```bash
+docker build -t orders:latest services/orders_service
+docker run -p 8000:8000 orders:latest
+
 The infrastructure creates an ECR repo, but you must push an image for ECS to run successfully.
 
 Get the ECR repository URI
@@ -223,10 +231,16 @@ CDK bootstrap errors
 
 
 ## Quick Start (one command)
+Before running the quickstart script, you must build and push the Orders service image to ECR.
 
 From the repository root, run:
 ```
+### One-command deploy (infra only)
 ./infra/cdk/quickstart.sh
+
+### One-command deploy (infra + service image)
+./infra/cdk/quickstart.sh --build-image
+
 ```
 
 This will:
