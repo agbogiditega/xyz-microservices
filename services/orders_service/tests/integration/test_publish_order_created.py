@@ -16,8 +16,10 @@ def _consume_one(url: str, queue: str) -> dict:
 
 def test_publish_order_created_to_rabbitmq():
     with RabbitMqContainer("rabbitmq:3.13-management") as rabbit:
-        # Use the correct method name
-        url = rabbit.get_amqp_url()
+        # Construct the AMQP URL manually
+        host = rabbit.get_container_host_ip()
+        port = rabbit.get_exposed_port(5672)
+        url = f"amqp://guest:guest@{host}:{port}/"
         os.environ["RABBITMQ_URL"] = url
 
         # Bind a test queue to the exchange/routing key
