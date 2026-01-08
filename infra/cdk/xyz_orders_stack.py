@@ -91,3 +91,5 @@ class XyzOrdersStack(Stack):
         CfnOutput(self, "OrdersEcrRepo", value=repo.repository_uri)
         CfnOutput(self, "OrderEventsTopicArn", value=order_events_topic.topic_arn)
         CfnOutput(self, "InventoryQueueUrl", value=inventory_q.queue_url)
+        CfnOutput(self, "ClusterName", value=cluster.cluster_name)
+        CfnOutput(self, "ServiceName", value=fargate.service.service_name)
