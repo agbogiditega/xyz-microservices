@@ -32,7 +32,7 @@ def test_e2e_order_created_event():
 
         # Start orders-service (example: uvicorn)
         proc = subprocess.Popen(
-            ["python", "-m", "uvicorn", "orders_service.app.main:app", "--port", "8010"],
+            ["python", "-m", "uvicorn", "services.orders_service.app.main:app", "--port", "8010"],
             # No cwd specified - runs from project root
             env=env,
         )
