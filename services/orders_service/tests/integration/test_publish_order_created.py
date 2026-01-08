@@ -2,7 +2,9 @@ import json
 import os
 import pika
 from testcontainers.rabbitmq import RabbitMqContainer
-from orders_service.app.publisher import publish_order_created, EXCHANGE, ROUTING_KEY
+#from orders_service.app.publisher import publish_order_created, EXCHANGE, ROUTING_KEY
+from services.orders_service.app.publisher import publish_order_created, EXCHANGE, ROUTING_KEY
+
 
 def _consume_one(url: str, queue: str) -> dict:
     conn = pika.BlockingConnection(pika.URLParameters(url))
