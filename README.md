@@ -12,7 +12,7 @@ It supports unit, integration and end-to-end (E2E) testing across services commu
 
 ## Prerequisites
 * Python 3.11+
-* Docket Desktop
+* Docker Desktop
 * AWS CLIv2
 * Least privilege IAM permissions for ECS, ECR, CloudWatch Logs, Secrets Manager and CI
 
@@ -22,7 +22,7 @@ It supports unit, integration and end-to-end (E2E) testing across services commu
 | -------- | ------- |
 | Language | Python 3.11 |
 | API Framework | FastAPI |
-| Messaging | Amazon SQS/SNS |
+| Messaging | RabbitMQ (local), Amazon SQS/SNS |
 | Compute | Amazon ECS (Fargate) |
 | CI/CD | GitHub --> AWS |
 | Secrets | AWS Secrets Manager |
@@ -48,10 +48,10 @@ pip install --upgrade
 pip install -e ".[test]"
 ```
 This installs:
-* Runtime dependencies
-* Testing dependencies
-* Coverage tools
-
+* Runtime dependencies (pika, uvicorn, fastapi, pydantic)
+* Testing dependencies (pytest, pytest-cov, httpx, testcontainers)
+* Coverage tools  
+  
 ## Running Services Locally
 ### Start RabbitMQ (Docker)
 ```
@@ -67,7 +67,7 @@ Default credentials: guest / guest
 ### Run a service (i.e. Orders Service)
 ```
 cd services/orders_service
-python -m uvicorn orders_service.app.main:app --reload --port 8010
+python -m uvicorn services.orders_service.app.main:app --reload --port 8010
 ```
 API docs available at: http://localhost:8010/docs
 
@@ -92,7 +92,8 @@ pytest
 pytest services/**/tests/unit
 ```
 
-### Run integration tests (Docker required)
+### Run integration tests (Docker required)  
+**Note:** Integration tests use testcontainers to automatically spin up RabbitMQ containers. Ensure Docker Desktop is running before executing these tests.
 ```
 pytest services/**/tests/integration
 ```
@@ -144,3 +145,15 @@ CI configuration file:
 4. Maintain > 80% code coverage
 5. All tests must pass before merge
 
+
+## Troubleshooting
+
+### Import Errors
+If you encounter `ModuleNotFoundError`, ensure you're running commands from the project root and have installed the package in editable mode:
+```
+pip install -e ".[test]"
+```
+
+### RabbitMQ Connection Issues
+If integration tests fail with connection errors, verify Docker is running:
+docker ps | grep rabbitmq
