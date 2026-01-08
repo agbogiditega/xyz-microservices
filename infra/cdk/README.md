@@ -220,6 +220,27 @@ CloudFormation, IAM, VPC/EC2, ECS, ELBv2, ECR, SNS, SQS, CloudWatch Logs
 
 CDK bootstrap errors
 
+
+
+## Quick Start (one command)
+
+From the repository root, run:
+```
+./infra/cdk/quickstart.sh
+```
+
+This will:
+
+* verify prerequisites (AWS CLI, Node, CDK, Python)
+
+* create and activate a Python virtual environment
+
+* install CDK dependencies
+
+* bootstrap the target AWS account/region (if needed)
+
+* deploy the stack
+
 Make sure you are bootstrapping the same account/region you are deploying to.
 
 
